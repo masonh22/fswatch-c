@@ -80,19 +80,19 @@ namespace fsw
     if (previous_data->tracked_files.count(path))
     {
       watched_file_info pwfi = previous_data->tracked_files[path];
-      vector<fsw_event_flag> flags;
+      fsw_event_flag flags = fsw_event_flag::NoOp;
 
       if (FSW_MTIME(stat) > pwfi.mtime)
       {
-        flags.push_back(fsw_event_flag::Updated);
+        flags = static_cast<fsw_event_flag>(flags | fsw_event_flag::Updated);
       }
 
       if (FSW_CTIME(stat) > pwfi.ctime)
       {
-        flags.push_back(fsw_event_flag::AttributeModified);
+        flags = static_cast<fsw_event_flag>(flags | fsw_event_flag::AttributeModified);
       }
 
-      if (!flags.empty())
+      if (flags != fsw_event_flag::NoOp)
       {
         events.emplace_back(path, curr_time, flags);
       }
@@ -101,9 +101,7 @@ namespace fsw
     }
     else
     {
-      vector<fsw_event_flag> flags;
-      flags.push_back(fsw_event_flag::Created);
-      events.emplace_back(path, curr_time, flags);
+      events.emplace_back(path, curr_time, fsw_event_flag::Created);
     }
 
     return true;
@@ -147,12 +145,9 @@ namespace fsw
 
   void poll_monitor::find_removed_files()
   {
-    vector<fsw_event_flag> flags;
-    flags.push_back(fsw_event_flag::Removed);
-
     for (const auto& removed : previous_data->tracked_files)
     {
-      events.emplace_back(removed.first, curr_time, flags);
+      events.emplace_back(removed.first, curr_time, fsw_event_flag::Removed);
     }
   }
 

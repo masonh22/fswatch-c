@@ -31,36 +31,38 @@ namespace fsw
   struct win_flag_type
   {
     DWORD action;
-    vector<fsw_event_flag> types;
+    fsw_event_flag types;
   };
 
   static vector<win_flag_type> create_flag_type_vector()
   {
     vector<win_flag_type> flags;
-    flags.push_back({FILE_ACTION_ADDED,            {fsw_event_flag::Created}});
-    flags.push_back({FILE_ACTION_REMOVED,          {fsw_event_flag::Removed}});
-    flags.push_back({FILE_ACTION_MODIFIED,         {fsw_event_flag::Updated}});
-    flags.push_back({FILE_ACTION_RENAMED_OLD_NAME, {fsw_event_flag::MovedFrom, fsw_event_flag::Renamed}});
-    flags.push_back({FILE_ACTION_RENAMED_NEW_NAME, {fsw_event_flag::MovedTo, fsw_event_flag::Renamed}});
+    flags.push_back({FILE_ACTION_ADDED,            fsw_event_flag::Created});
+    flags.push_back({FILE_ACTION_REMOVED,          fsw_event_flag::Removed});
+    flags.push_back({FILE_ACTION_MODIFIED,         fsw_event_flag::Updated});
+    flags.push_back({FILE_ACTION_RENAMED_OLD_NAME, static_cast<fsw_event_flag>(fsw_event_flag::MovedFrom | fsw_event_flag::Renamed)});
+    flags.push_back({FILE_ACTION_RENAMED_NEW_NAME, static_cast<fsw_event_flag>(fsw_event_flag::MovedTo | fsw_event_flag::Renamed)});
 
     return flags;
   }
 
   static const vector<win_flag_type> event_flag_type = create_flag_type_vector();
 
-  static vector<fsw_event_flag> decode_flags(DWORD flag)
+  static fsw_event_flag decode_flags(DWORD flag)
   {
-    set<fsw_event_flag> evt_flags_set;
+    fsw_event_flag evt_flags = fsw_event_flag::NoOp;
 
     for (const win_flag_type & event_type : event_flag_type)
     {
       if (flag == event_type.action)
       {
-        for (const auto & type : event_type.types) evt_flags_set.insert(type);
+        for (const auto & type : event_type.types) {
+          evt_flags = static_cast<fsw_event_flag>(evt_flags | type);
+        }
       }
     }
 
-    return vector<fsw_event_flag>(evt_flags_set.begin(), evt_flags_set.end());
+    return evt_flags;
   }
 
   directory_change_event::directory_change_event(size_t buffer_length)

@@ -22,13 +22,13 @@ using namespace std;
 
 namespace fsw
 {
-  event::event(string path, time_t evt_time, vector<fsw_event_flag> flags) :
-    path(std::move(path)), evt_time(evt_time), evt_flags(std::move(flags))
+  event::event(string path, time_t evt_time, fsw_event_flag flags) :
+    path(std::move(path)), evt_time(evt_time), evt_flags(flags)
   {
   }
 
-  event::event(string path, time_t evt_time, vector<fsw_event_flag> flags, unsigned long correlation_id) :
-    path(std::move(path)), evt_time(evt_time), evt_flags(std::move(flags)), correlation_id(correlation_id)
+  event::event(string path, time_t evt_time, fsw_event_flag flags, unsigned long correlation_id) :
+    path(std::move(path)), evt_time(evt_time), evt_flags(flags), correlation_id(correlation_id)
   {
   }
 
@@ -44,7 +44,7 @@ namespace fsw
     return evt_time;
   }
 
-  vector<fsw_event_flag> event::get_flags() const
+  fsw_event_flag event::get_flags() const
   {
     return evt_flags;
   }

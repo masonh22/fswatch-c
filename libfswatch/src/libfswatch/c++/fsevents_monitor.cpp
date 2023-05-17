@@ -153,15 +153,15 @@ namespace fsw
     stream = nullptr;
   }
 
-  static vector<fsw_event_flag> decode_flags(FSEventStreamEventFlags flag)
+  static fsw_event_flag decode_flags(FSEventStreamEventFlags flag)
   {
-    vector<fsw_event_flag> evt_flags;
+    fsw_event_flag evt_flags = fsw_event_flag::NoOp;
 
     for (const FSEventFlagType& type : event_flag_type)
     {
       if (flag & type.flag)
       {
-        evt_flags.push_back(type.type);
+        evt_flags = static_cast<sfw_event_flag<(evt_flags | type.type);
       }
     }
 

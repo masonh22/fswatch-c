@@ -414,7 +414,7 @@ namespace fsw
      *
      * @param filter The event type filter to add.
      */
-    void add_event_type_filter(const fsw_event_type_filter& filter);
+    void add_event_type_filter(const fsw_event_type_filter filter);
 
     /**
      * @brief Set the event type filters.
@@ -424,8 +424,7 @@ namespace fsw
      *
      * @param filters The filters to set.
      */
-    void set_event_type_filters(
-      const std::vector<fsw_event_type_filter>& filters);
+    void set_event_type_filters(const fsw_event_type_filter filters);
 
     /**
      * @brief Monitor file access.
@@ -488,7 +487,7 @@ namespace fsw
      * @param evt The event whose types must be filtered.
      * @return A vector containing the acceptable events.
      */
-    std::vector<fsw_event_flag> filter_flags(const event& evt) const;
+    fsw_event_flag filter_flags(const event& evt) const;
 
     /**
      * @brief Execute monitor loop.
@@ -614,7 +613,7 @@ namespace fsw
   private:
     std::chrono::milliseconds get_latency_ms() const;
     std::vector<compiled_monitor_filter> filters;
-    std::vector<fsw_event_type_filter> event_type_filters;
+    fsw_event_type_filter event_type_filters;
 
     static void inactivity_callback(monitor *mon);
     mutable std::atomic<std::chrono::milliseconds> last_notification;

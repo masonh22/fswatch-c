@@ -463,7 +463,7 @@ using FSW_SESSION = struct FSW_SESSION
   bool directory_only;
   bool follow_symlinks;
   vector<monitor_filter> filters;
-  vector<fsw_event_type_filter> event_type_filters;
+  fsw_event_type_filter event_type_filters;
   map<string, string> properties;
   void *data;
 };
@@ -531,23 +531,7 @@ void libfsw_cpp_callback_proxy(const std::vector<event>& events,
     strncpy(cevt->path, path.c_str(), path.length());
     cevt->path[path.length()] = '\0';
     cevt->evt_time = evt.get_time();
-
-    const vector<fsw_event_flag> flags = evt.get_flags();
-    cevt->flags_num = flags.size();
-
-    if (!cevt->flags_num) cevt->flags = nullptr;
-    else
-    {
-      cevt->flags =
-        static_cast<fsw_event_flag *> (
-          malloc(sizeof(fsw_event_flag) * cevt->flags_num));
-      if (!cevt->flags) throw int(FSW_ERR_MEMORY);
-    }
-
-    for (unsigned int e = 0; e < cevt->flags_num; ++e)
-    {
-      cevt->flags[e] = flags[e];
-    }
+    cevt->flags = evt.get_flags();
   }
 
   // TODO manage C++ exceptions from C code
@@ -558,7 +542,6 @@ void libfsw_cpp_callback_proxy(const std::vector<event>& events,
   {
     fsw_cevent *cevt = &cevents[i];
 
-    if (cevt->flags) free(static_cast<void *> (cevt->flags));
     free(static_cast<void *> (cevt->path));
   }
 
@@ -700,7 +683,8 @@ FSW_STATUS fsw_add_event_type_filter(const FSW_HANDLE handle,
                                      const fsw_event_type_filter event_type)
 {
   FSW_SESSION *session = get_session(handle);
-  session->event_type_filters.push_back(event_type);
+  session->event_type_filters =
+    static_cast<fsw_event_type_filter>(session->event_type_filters | event_type);
 
   return fsw_set_last_error(FSW_OK);
 }

@@ -52,10 +52,7 @@ extern "C"
  /**
   * @brief Event type filter.
   */
-  typedef struct fsw_event_type_filter
-  {
-    enum fsw_event_flag flag;
-  } fsw_event_type_filter;
+  typedef fsw_event_flag fsw_event_type_filter;
 
 #  ifdef __cplusplus
 }

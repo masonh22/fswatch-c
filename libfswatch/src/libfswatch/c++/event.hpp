@@ -28,7 +28,6 @@
 
 #  include <string>
 #  include <ctime>
-#  include <vector>
 #  include <iostream>
 #  include "../c/cevent.h"
 
@@ -53,9 +52,9 @@ namespace fsw
      *
      * @param path The path the event refers to.
      * @param evt_time The time the event was raised.
-     * @param flags The vector of flags specifying the type of the event.
+     * @param flags The bitmask of flags specifying the type of the event.
      */
-    event(std::string path, time_t evt_time, std::vector<fsw_event_flag> flags);
+    event(std::string path, time_t evt_time, fsw_event_flag flags);
 
     /**
      * @brief Constructs an event.
@@ -65,7 +64,7 @@ namespace fsw
      * @param flags The vector of flags specifying the type of the event.
      * @param correlation_id The correlation_id of the file the event refers to.
      */
-    event(std::string path, time_t evt_time, std::vector<fsw_event_flag> flags, unsigned long correlation_id);
+    event(std::string path, time_t evt_time, fsw_event_flag flags, unsigned long correlation_id);
 
     /**
      * @brief Destructs an event.
@@ -93,7 +92,7 @@ namespace fsw
      *
      * @return The flags of the event.
      */
-    std::vector<fsw_event_flag> get_flags() const;
+    fsw_event_flag get_flags() const;
 
     /**
      * @brief Returns the correlation_id of the file of the event.
@@ -122,7 +121,7 @@ namespace fsw
   private:
     std::string path;
     time_t evt_time;
-    std::vector<fsw_event_flag> evt_flags;
+    fsw_event_flag evt_flags;
     unsigned long correlation_id = 0;
   };
 

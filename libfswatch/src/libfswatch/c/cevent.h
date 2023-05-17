@@ -117,8 +117,7 @@ extern "C"
   {
     char * path;
     time_t evt_time;
-    enum fsw_event_flag * flags;
-    unsigned int flags_num;
+    enum fsw_event_flag flags;
   } fsw_cevent;
 
   /**

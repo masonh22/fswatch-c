@@ -80,7 +80,7 @@ static const unsigned int TIME_FORMAT_BUFF_SIZE = 128;
 
 static monitor *active_monitor = nullptr;
 static std::vector<monitor_filter> filters;
-static std::vector<fsw_event_type_filter> event_filters;
+static fsw_event_type_filter event_filters;
 static std::vector<std::string> filter_files;
 static bool _0flag = false;
 static bool _1flag = false;
@@ -252,15 +252,7 @@ static bool parse_event_bitmask(const char *optarg)
   try
   {
     auto bitmask = std::stoul(optarg, nullptr, 10);
-
-    for (const auto& item : FSW_ALL_EVENT_FLAGS)
-    {
-      if ((bitmask & item) == item)
-      {
-        event_filters.push_back({item});
-      }
-    }
-
+    event_filters = static_cast<fsw_event_type_filter>(event_filters | bitmask);
     return true;
   }
   catch (const std::invalid_argument& ex)
@@ -275,7 +267,8 @@ static bool parse_event_filter(const char *optarg)
 
   try
   {
-    event_filters.push_back({event::get_event_flag_by_name(optarg)});
+    fsw_event_type_filter filter = event::get_event_flag_by_name(optarg);
+    event_filters = static_cast<fsw_event_type_filter>(event_filters | filter);
     return true;
   }
   catch (const libfsw_exception& ex)
@@ -362,28 +355,7 @@ static void print_event_timestamp(const event& evt)
 
 static void print_event_flags(const event& evt)
 {
-  const std::vector<fsw_event_flag>& flags = evt.get_flags();
-
-  if (nflag)
-  {
-    int mask = 0;
-    for (const fsw_event_flag& flag : flags)
-    {
-      mask += static_cast<int> (flag);
-    }
-
-    std::cout << mask;
-  }
-  else
-  {
-    for (size_t i = 0; i < flags.size(); ++i)
-    {
-      std::cout << flags[i];
-
-      // Event flag separator is currently hard-coded.
-      if (i != flags.size() - 1) std::cout << event_flag_separator;
-    }
-  }
+  std::cout << static_cast<int>(evt.get_flags());
 }
 
 static void print_end_of_event_record()
@@ -795,8 +767,7 @@ static int printf_event_validate_format()
       format_noop
     };
 
-  const std::vector<fsw_event_flag> flags;
-  const event empty("", 0, flags);
+  const event empty("", 0, fsw_event_flag::NoOp);
   std::ostream noop_stream(nullptr);
 
   return printf_event(empty, noop_callbacks, noop_stream);

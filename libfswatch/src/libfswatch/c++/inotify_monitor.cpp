@@ -193,13 +193,16 @@ namespace fsw
 
   void inotify_monitor::preprocess_dir_event(const struct inotify_event *event)
   {
-    std::vector<fsw_event_flag> flags;
+    fsw_event_flag flags = fsw_event_flag::NoOp;
 
-    if (event->mask & IN_ISDIR) flags.push_back(fsw_event_flag::IsDir);
-    if (event->mask & IN_MOVE_SELF) flags.push_back(fsw_event_flag::Updated);
-    if (event->mask & IN_UNMOUNT) flags.push_back(fsw_event_flag::PlatformSpecific);
+    if (event->mask & IN_ISDIR)
+      flags = static_cast<fsw_event_flag>(flags | fsw_event_flag::IsDir);
+    if (event->mask & IN_MOVE_SELF)
+      flags = static_cast<fsw_event_flag>(flags | fsw_event_flag::Updated);
+    if (event->mask & IN_UNMOUNT)
+      flags = static_cast<fsw_event_flag>(flags | fsw_event_flag::PlatformSpecific);
 
-    if (!flags.empty())
+    if (flags != fsw_event_flag::NoOp)
     {
       impl->events.emplace_back(impl->wd_to_path[event->wd], impl->curr_time, flags, event->cookie);
     }
@@ -213,26 +216,33 @@ namespace fsw
 
   void inotify_monitor::preprocess_node_event(const struct inotify_event *event)
   {
-    std::vector<fsw_event_flag> flags;
+    fsw_event_flag flags = fsw_event_flag::NoOp;
 
-    if (event->mask & IN_ACCESS) flags.push_back(fsw_event_flag::PlatformSpecific);
-    if (event->mask & IN_ATTRIB) flags.push_back(fsw_event_flag::AttributeModified);
-    if (event->mask & IN_CLOSE_NOWRITE) flags.push_back(fsw_event_flag::PlatformSpecific);
-    if (event->mask & IN_CLOSE_WRITE) flags.push_back(fsw_event_flag::Updated);
-    if (event->mask & IN_CREATE) flags.push_back(fsw_event_flag::Created);
-    if (event->mask & IN_DELETE) flags.push_back(fsw_event_flag::Removed);
-    if (event->mask & IN_MODIFY) flags.push_back(fsw_event_flag::Updated);
+    if (event->mask & IN_ACCESS)
+      flags = static_cast<fsw_event_flag>(flags | fsw_event_flag::PlatformSpecific);
+    if (event->mask & IN_ATTRIB)
+      flags = static_cast<fsw_event_flag>(flags | fsw_event_flag::AttributeModified);
+    if (event->mask & IN_CLOSE_NOWRITE)
+      flags = static_cast<fsw_event_flag>(flags | fsw_event_flag::PlatformSpecific);
+    if (event->mask & IN_CLOSE_WRITE)
+      flags = static_cast<fsw_event_flag>(flags | fsw_event_flag::Updated);
+    if (event->mask & IN_CREATE)
+      flags = static_cast<fsw_event_flag>(flags | fsw_event_flag::Created);
+    if (event->mask & IN_DELETE)
+      flags = static_cast<fsw_event_flag>(flags | fsw_event_flag::Removed);
+    if (event->mask & IN_MODIFY)
+      flags = static_cast<fsw_event_flag>(flags | fsw_event_flag::Updated);
     if (event->mask & IN_MOVED_FROM)
     {
-      flags.push_back(fsw_event_flag::Removed);
-      flags.push_back(fsw_event_flag::MovedFrom);
+      flags = static_cast<fsw_event_flag>(flags | fsw_event_flag::Removed);
+      flags = static_cast<fsw_event_flag>(flags | fsw_event_flag::MovedFrom);
     }
     if (event->mask & IN_MOVED_TO)
     {
-      flags.push_back(fsw_event_flag::Created);
-      flags.push_back(fsw_event_flag::MovedTo);
+      flags = static_cast<fsw_event_flag>(flags | fsw_event_flag::Created);
+      flags = static_cast<fsw_event_flag>(flags | fsw_event_flag::MovedTo);
     }
-    if (event->mask & IN_OPEN) flags.push_back(fsw_event_flag::PlatformSpecific);
+    if (event->mask & IN_OPEN) flags = static_cast<fsw_event_flag>(flags | fsw_event_flag::PlatformSpecific);
 
     // Build the file name.
     std::ostringstream filename_stream;
@@ -244,7 +254,7 @@ namespace fsw
       filename_stream << event->name;
     }
 
-    if (!flags.empty())
+    if (flags != fsw_event_flag::NoOp)
     {
       impl->events.emplace_back(filename_stream.str(), impl->curr_time, flags, event->cookie);
     }

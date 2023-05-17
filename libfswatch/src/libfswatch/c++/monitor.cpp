@@ -98,17 +98,16 @@ namespace fsw
     this->directory_only = directory_only;
   }
 
-  void monitor::add_event_type_filter(const fsw_event_type_filter& filter)
+  void monitor::add_event_type_filter(const fsw_event_type_filter filter)
   {
-    this->event_type_filters.push_back(filter);
+    event_type_filters =
+      static_cast<fsw_event_type_filter>(event_type_filters | filter);
   }
 
   void
-  monitor::set_event_type_filters(const std::vector<fsw_event_type_filter>& filters)
+  monitor::set_event_type_filters(const fsw_event_type_filter filters)
   {
-    event_type_filters.clear();
-
-    for (const auto& filter : filters) add_event_type_filter(filter);
+    event_type_filters = filters;
   }
 
   void monitor::add_filter(const monitor_filter& filter)
@@ -169,13 +168,10 @@ namespace fsw
   bool monitor::accept_event_type(fsw_event_flag event_type) const
   {
     // If no filters are set, then accept the event.
-    if (event_type_filters.empty()) return true;
+    if (event_type_filters == 0) return true;
 
     // If filters are set, accept the event only if present amongst the filters.
-    return std::any_of(event_type_filters.begin(),
-                    event_type_filters.end(),
-                    [event_type](const fsw_event_type_filter& filter)
-                     { return filter.flag == event_type; });
+    return event_type & event_type_filters;
   }
 
   bool monitor::accept_path(const std::string& path) const
@@ -304,19 +300,12 @@ monitor::~monitor()
     return this->running;
   }
 
-  std::vector<fsw_event_flag> monitor::filter_flags(const event& evt) const
+  fsw_event_flag monitor::filter_flags(const event& evt) const
   {
     // If there is nothing to filter, just return the original vector.
-    if (event_type_filters.empty()) return evt.get_flags();
+    if (event_type_filters == 0) return evt.get_flags();
 
-    std::vector<fsw_event_flag> filtered_flags;
-
-    for (auto const& flag : evt.get_flags())
-    {
-      if (accept_event_type(flag)) filtered_flags.push_back(flag);
-    }
-
-    return filtered_flags;
+    return static_cast<fsw_event_flag>(evt.get_flags() & event_type_filters);
   }
 
   void monitor::notify_overflow(const std::string& path) const
@@ -344,9 +333,9 @@ monitor::~monitor()
     for (auto const& event : events)
     {
       // Filter flags
-      std::vector<fsw_event_flag> filtered_flags = filter_flags(event);
+      fsw_event_flag filtered_flags = filter_flags(event);
 
-      if (filtered_flags.empty()) continue;
+      if (filtered_flags == fsw_event_flag::NoOp) continue;
       if (!accept_path(event.get_path())) continue;
 
       filtered_events.emplace_back(event.get_path(),
@@ -358,12 +347,13 @@ monitor::~monitor()
     if (bubble_events)
     {
       // Bubble events by ({time, path})
-      std::map<std::pair<time_t, std::string>, std::set<fsw_event_flag>> bubbled_events;
+      std::map<std::pair<time_t, std::string>, fsw_event_flag> bubbled_events;
 
       for (auto const& event : filtered_events)
       {
-        const auto& flags = event.get_flags();
-        bubbled_events[{event.get_time(), event.get_path()}].insert(flags.begin(), flags.end());
+        const auto new_flags = event.get_flags();
+        auto& existing_flags = bubbled_events[{event.get_time(), event.get_path()}];
+        existing_flags = static_cast<fsw_event_flag>(existing_flags | new_flags);
       }
 
       filtered_events.clear();
@@ -372,10 +362,7 @@ monitor::~monitor()
         auto const& bubble_key = evt.first;
         auto const& flags = evt.second;
 
-        std::vector<fsw_event_flag> bubbled_flags(flags.size());
-        std::move(flags.begin(), flags.end(), bubbled_flags.begin());
-
-        filtered_events.emplace_back(bubble_key.second, bubble_key.first, bubbled_flags);
+        filtered_events.emplace_back(bubble_key.second, bubble_key.first, flags);
       }
     }
 
