@@ -689,6 +689,15 @@ FSW_STATUS fsw_add_event_type_filter(const FSW_HANDLE handle,
   return fsw_set_last_error(FSW_OK);
 }
 
+FSW_STATUS fsw_set_event_type_filters(const FSW_HANDLE handle,
+                                      const fsw_event_type_filter event_type)
+{
+  FSW_SESSION *session = get_session(handle);
+  session->event_type_filters = event_type;
+
+  return fsw_set_last_error(FSW_OK);
+}
+
 FSW_STATUS fsw_add_filter(const FSW_HANDLE handle,
                           const fsw_cmonitor_filter filter)
 {

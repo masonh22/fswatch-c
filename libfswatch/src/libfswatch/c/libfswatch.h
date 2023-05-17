@@ -162,6 +162,14 @@ extern "C"
                                        const fsw_event_type_filter event_type);
 
   /**
+   * Sets the event type filter to the bitmask event_type.
+   *
+   * See cfilter.h for the definition of fsw_event_type_filter.
+   */
+  FSW_STATUS fsw_set_event_type_filters(const FSW_HANDLE handle,
+                                        const fsw_event_type_filter event_type);
+
+  /**
    * Adds a filter to the current session.  A filter is a regular expression
    * that, depending on whether the filter type is exclusion or not, must or
    * must not be matched for an event path for the event to be accepted.
